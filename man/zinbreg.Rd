@@ -61,7 +61,8 @@ for \eqn{(\beta, \theta)}, both by IRLS (with Newton-Raphson for
 
 Standard errors are obtained by inverting the observed information
 matrix of the observed-data log-likelihood with respect to
-\eqn{(\beta, \gamma, \log\theta)} at the estimates.
+\eqn{(\beta, \gamma, \log\theta)} at the estimates. By default its
+second derivatives are computed analytically; see \code{\link[=zinbreg_control]{zinbreg_control()}}.
 }
 \examples{
 set.seed(1)

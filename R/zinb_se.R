@@ -27,18 +27,26 @@ zinb_loglik_par <- function(par, X, Z, y, offset) {
 #' observed-data log-likelihood with respect to (beta, gamma, log(theta))
 #' at the MLE and invert it:
 #'   Var(estimates) = [ -Hessian of log-likelihood ]^{-1}.
-#' The Hessian is obtained numerically with numDeriv::hessian(), which
-#' differentiates our own log-likelihood (it does not optimize anything).
+#' The Hessian is either derived analytically (zinb_hessian(), the default)
+#' or obtained numerically with numDeriv::hessian(), which differentiates
+#' our own log-likelihood (it does not optimize anything).
 #'
 #' @param beta,gamma,theta Estimates at convergence.
+#' @param hessian "analytic" or "numerical".
 #' @inheritParams zinb_loglik_par
 #' @return The variance-covariance matrix, with rows and columns named
 #'   count_*, zero_* and Log(theta), as in pscl::zeroinfl().
 #' @noRd
-zinb_vcov <- function(beta, gamma, theta, X, Z, y, offset) {
+zinb_vcov <- function(beta, gamma, theta, X, Z, y, offset,
+                      hessian = c("analytic", "numerical")) {
+  hessian <- match.arg(hessian)
   par <- c(beta, gamma, log(theta))
-  H <- numDeriv::hessian(zinb_loglik_par, par, X = X, Z = Z, y = y,
-                         offset = offset)
+  H <- if (hessian == "analytic") {
+    zinb_hessian(par, X, Z, y, offset)
+  } else {
+    numDeriv::hessian(zinb_loglik_par, par, X = X, Z = Z, y = y,
+                      offset = offset)
+  }
   V <- solve(-H)
   nms <- c(paste0("count_", colnames(X)), paste0("zero_", colnames(Z)),
            "Log(theta)")

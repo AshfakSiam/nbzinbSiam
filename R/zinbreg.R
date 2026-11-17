@@ -7,19 +7,26 @@
 #' @param maxit Maximum number of EM iterations.
 #' @param trace If `TRUE`, print the log-likelihood and theta at every EM
 #'   iteration.
+#' @param hessian How the Hessian for the standard errors is computed:
+#'   `"analytic"` (the default) uses the second derivatives derived by hand;
+#'   `"numerical"` uses `numDeriv::hessian()` on the log-likelihood.
 #'
-#' @return A list with components `tol`, `maxit` and `trace`.
+#' @return A list with components `tol`, `maxit`, `trace` and `hessian`.
 #' @examples
 #' zinbreg_control(tol = 1e-10, maxit = 5000)
+#' zinbreg_control(hessian = "numerical")
 #' @export
-zinbreg_control <- function(tol = 1e-8, maxit = 1000, trace = FALSE) {
+zinbreg_control <- function(tol = 1e-8, maxit = 1000, trace = FALSE,
+                            hessian = c("analytic", "numerical")) {
+  hessian <- match.arg(hessian)
   if (!is.numeric(tol) || length(tol) != 1 || tol <= 0) {
     stop("'tol' must be a single positive number.")
   }
   if (!is.numeric(maxit) || length(maxit) != 1 || maxit < 1) {
     stop("'maxit' must be a single positive integer.")
   }
-  list(tol = tol, maxit = as.integer(maxit), trace = isTRUE(trace))
+  list(tol = tol, maxit = as.integer(maxit), trace = isTRUE(trace),
+       hessian = hessian)
 }
 
 #' ZINB fitting engine: EM algorithm with IRLS M-steps
@@ -98,7 +105,8 @@ zinb_fit <- function(X, Z, y, offset = rep(0, length(y)),
   names(gamma) <- colnames(Z)
 
   # Standard errors from the observed information matrix.
-  vcov <- zinb_vcov(beta, gamma, theta, X, Z, y, offset)
+  hessian <- if (is.null(control$hessian)) "analytic" else control$hessian
+  vcov <- zinb_vcov(beta, gamma, theta, X, Z, y, offset, hessian = hessian)
 
   list(count = beta, zero = gamma, theta = theta, vcov = vcov, loglik = ll,
        loglik_path = ll_path, iter = iter, converged = converged,
@@ -124,7 +132,8 @@ zinb_fit <- function(X, Z, y, offset = rep(0, length(y)),
 #'
 #' Standard errors are obtained by inverting the observed information
 #' matrix of the observed-data log-likelihood with respect to
-#' \eqn{(\beta, \gamma, \log\theta)} at the estimates.
+#' \eqn{(\beta, \gamma, \log\theta)} at the estimates. By default its
+#' second derivatives are computed analytically; see [zinbreg_control()].
 #'
 #' @param formula A two-part formula `y ~ x1 + x2 | z1 + z2`: count-model
 #'   covariates before the `|` and zero-model covariates after it. Without

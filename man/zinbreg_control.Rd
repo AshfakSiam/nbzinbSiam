@@ -4,7 +4,12 @@
 \alias{zinbreg_control}
 \title{Control parameters for zinbreg()}
 \usage{
-zinbreg_control(tol = 1e-08, maxit = 1000, trace = FALSE)
+zinbreg_control(
+  tol = 1e-08,
+  maxit = 1000,
+  trace = FALSE,
+  hessian = c("analytic", "numerical")
+)
 }
 \arguments{
 \item{tol}{Convergence tolerance. The EM algorithm stops when the
@@ -16,13 +21,18 @@ same tolerance.}
 
 \item{trace}{If \code{TRUE}, print the log-likelihood and theta at every EM
 iteration.}
+
+\item{hessian}{How the Hessian for the standard errors is computed:
+\code{"analytic"} (the default) uses the second derivatives derived by hand;
+\code{"numerical"} uses \code{numDeriv::hessian()} on the log-likelihood.}
 }
 \value{
-A list with components \code{tol}, \code{maxit} and \code{trace}.
+A list with components \code{tol}, \code{maxit}, \code{trace} and \code{hessian}.
 }
 \description{
 Control parameters for zinbreg()
 }
 \examples{
 zinbreg_control(tol = 1e-10, maxit = 5000)
+zinbreg_control(hessian = "numerical")
 }
