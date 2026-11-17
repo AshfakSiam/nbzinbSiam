@@ -1,0 +1,308 @@
+---
+title: "Negative Binomial and Zero-Inflated Negative Binomial Regression by IRLS and EM"
+subtitle: "STA 651 Final Project: the nbzinbSiam R package"
+author: "Ashfak Siam"
+date: "2026-11-17"
+date-format: long
+format:
+  pdf:
+    documentclass: article
+    geometry: margin=1in
+    fontsize: 11pt
+    number-sections: true
+    colorlinks: true
+    fig-width: 6.5
+    fig-height: 3.6
+  html:
+    number-sections: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(nbzinbSiam)
+library(knitr)
+data("NMES1988", package = "AER")
+
+# Tables: LaTeX tables in the PDF (so they never break across pages),
+# Markdown tables on the website.
+kable <- function(...) {
+  if (knitr::is_latex_output()) {
+    knitr::kable(..., format = "latex", linesep = "")
+  } else {
+    knitr::kable(..., format = "pipe")
+  }
+}
+
+# Formatting helpers.
+fmt <- function(x, digits = 2) formatC(x, format = "f", digits = digits)
+wald_ci <- function(est, se, digits = 2) {
+  sprintf("%s (%s, %s)", fmt(exp(est), digits),
+          fmt(exp(est - qnorm(0.975) * se), digits),
+          fmt(exp(est + qnorm(0.975) * se), digits))
+}
+```
+
+# Introduction
+
+*To be written in the next commit.*
+
+# Methods
+
+*To be written in the next commit.*
+
+# The R package
+
+*To be written in the next commit.*
+
+# Benchmarking
+
+*To be written in the next commit.*
+
+# Simulation study
+
+*To be written in the next commit.*
+
+# Data analysis: NMES1988 {#sec-nmes}
+
+```{r}
+#| label: nmes-data
+d <- NMES1988
+y <- d$visits
+n <- length(y)
+obs_zero <- sum(y == 0)
+pois_zero_share <- dpois(0, mean(y))
+```
+
+The `NMES1988` data (Deb and Trivedi 1997), included in the **AER**
+package, record the number of physician office visits (`visits`) in
+1987--88 for `r format(n, big.mark = ",")` people aged 66 and over in the
+US National Medical Expenditure Survey. We model `visits` with the
+covariates
+
+* `hospital`: number of hospital stays;
+* `health`: self-perceived health, with levels `poor`, `average`
+  (the reference level) and `excellent`;
+* `chronic`: number of chronic conditions;
+* `gender`: `female` (reference) or `male`;
+* `school`: number of years of education;
+* `insurance`: whether the person has private insurance (`no` is the
+  reference).
+
+## Overdispersion and excess zeros
+
+The mean number of visits is `r fmt(mean(y))`, but the variance is
+`r fmt(var(y))`, about `r round(var(y) / mean(y))` times the mean. A Poisson
+distribution would have variance equal to its mean, so the data are
+strongly **overdispersed**. In addition, `r obs_zero` people
+(`r fmt(100 * mean(y == 0), 1)`%) made no visit at all, while a Poisson
+distribution with the same mean predicts only `r fmt(100 * pois_zero_share, 1)`%
+zeros (about `r round(n * pois_zero_share)` people). @fig-nmes-dist shows both
+features: far too many zeros and a much longer right tail than the Poisson
+distribution allows. Both motivate the NB and ZINB models.
+
+```{r}
+#| label: fig-nmes-dist
+#| fig-cap: "Observed frequencies of physician office visits (bars) and the frequencies expected under a Poisson distribution with the same mean (points). The last bar collects 30 or more visits."
+k <- 0:30
+tab <- table(factor(pmin(y, 30), levels = k))
+pois_exp <- n * c(dpois(0:29, mean(y)), ppois(29, mean(y), lower.tail = FALSE))
+op <- par(mar = c(4, 4, 1, 1))
+bp <- barplot(tab, col = "grey80", border = "grey40",
+              ylim = c(0, max(c(tab, pois_exp)) * 1.05),
+              xlab = "Physician office visits (30 = 30 or more)",
+              ylab = "Frequency", names.arg = k, cex.names = 0.7)
+points(bp, pois_exp, pch = 19, col = "firebrick")
+legend("topright", c("Observed", "Poisson expected"), pch = c(22, 19),
+       pt.bg = c("grey80", NA), pt.cex = c(2, 1),
+       col = c("grey40", "firebrick"), bty = "n")
+par(op)
+```
+
+## Models
+
+```{r}
+#| label: nmes-fit
+f_count <- visits ~ hospital + health + chronic + gender + school + insurance
+f_zinb <- visits ~ hospital + health + chronic + gender + school + insurance |
+  hospital + chronic + gender + school + insurance
+
+m_pois <- glm(f_count, family = poisson, data = d)
+m_nb <- nbreg(f_count, data = d)
+m_zinb <- zinbreg(f_zinb, data = d)
+
+# Same ZINB model with health also in the zero part, to check the choice
+# of zero-model covariates.
+m_zinb_h <- zinbreg(update(f_count, . ~ .), data = d)
+```
+
+We fit three models with the count-model covariates listed above: a
+Poisson regression (with `glm()`, for reference), an NB regression with
+`nbreg()`, and a ZINB regression with `zinbreg()`. Following the project
+description, the zero-inflation part of the ZINB model uses `hospital`,
+`chronic`, `gender`, `school` and `insurance`. We also tried adding
+`health` to the zero part: this raises the log-likelihood by only
+`r fmt(as.numeric(logLik(m_zinb_h) - logLik(m_zinb)), 2)` for two extra
+parameters, neither health coefficient is significant, and both AIC
+(`r fmt(AIC(m_zinb_h), 1)` vs `r fmt(AIC(m_zinb), 1)`) and BIC
+(`r fmt(BIC(m_zinb_h), 1)` vs `r fmt(BIC(m_zinb), 1)`) prefer the
+smaller zero model, so we keep it.
+
+## Model comparison
+
+```{r}
+#| label: tbl-nmes-compare
+#| tbl-cap: !expr 'paste0("Model comparison for NMES1988 (observed zeros = ", obs_zero, ").")'
+p_zinb <- predict(m_zinb, type = "zero")
+mu_zinb <- predict(m_zinb, type = "count")
+exp_zero <- c(
+  Poisson = sum(dpois(0, fitted(m_pois))),
+  NB = sum(dnbinom(0, size = m_nb$theta, mu = fitted(m_nb))),
+  ZINB = sum(p_zinb + (1 - p_zinb) *
+               dnbinom(0, size = m_zinb$theta, mu = mu_zinb))
+)
+models <- list(m_pois, m_nb, m_zinb)
+cmp <- data.frame(
+  Model = names(exp_zero),
+  df = sapply(models, function(m) attr(logLik(m), "df")),
+  logLik = sapply(models, function(m) as.numeric(logLik(m))),
+  AIC = sapply(models, AIC),
+  BIC = sapply(models, BIC),
+  ExpectedZeros = exp_zero
+)
+kable(cmp, digits = 1, row.names = FALSE, booktabs = TRUE,
+      col.names = c("Model", "df", "logLik", "AIC", "BIC",
+                    "Expected zeros"))
+```
+
+@tbl-nmes-compare compares the three models. The Poisson model fits very
+poorly: it predicts only `r round(exp_zero["Poisson"])` zeros against
+`r obs_zero` observed, and its AIC is
+`r format(round(AIC(m_pois) - AIC(m_nb)), big.mark = ",")` higher than the NB
+model's. Allowing for overdispersion ($\hat\theta =$ `r fmt(m_nb$theta)`)
+fixes most of the problem, but the NB model still **under-predicts** the
+zeros (`r round(exp_zero["NB"])` expected vs `r obs_zero` observed). The
+ZINB model predicts `r round(exp_zero["ZINB"])` zeros, closer to the observed
+count, and improves the log-likelihood by
+`r fmt(as.numeric(logLik(m_zinb) - logLik(m_nb)), 1)` at the cost of
+`r attr(logLik(m_zinb), "df") - attr(logLik(m_nb), "df")` extra parameters.
+Unlike in the `bioChemists` example, **both AIC and BIC favour the ZINB
+model** here (AIC `r fmt(AIC(m_zinb), 1)` vs `r fmt(AIC(m_nb), 1)`; BIC
+`r fmt(BIC(m_zinb), 1)` vs `r fmt(BIC(m_nb), 1)`).
+
+## Interpretation
+
+```{r}
+#| label: nmes-tables
+s_nb <- summary(m_nb)$coefficients[-1, ]
+s_zc <- summary(m_zinb)$coefficients$count
+s_zc <- s_zc[!rownames(s_zc) %in% c("(Intercept)", "Log(theta)"), ]
+s_zz <- summary(m_zinb)$coefficients$zero[-1, ]
+
+irr <- function(name, tab) exp(tab[name, 1])
+or <- function(name) exp(s_zz[name, 1])
+pct <- function(r) fmt(100 * abs(r - 1), 0)
+```
+
+```{r}
+#| label: tbl-nmes-irr
+#| tbl-cap: "Count part: incidence rate ratios (IRR) with 95% Wald confidence intervals."
+kable(data.frame(Covariate = rownames(s_nb),
+                 `NB IRR (95% CI)` = wald_ci(s_nb[, 1], s_nb[, 2]),
+                 `ZINB count IRR (95% CI)` = wald_ci(s_zc[, 1], s_zc[, 2]),
+                 check.names = FALSE),
+      row.names = FALSE, booktabs = TRUE, align = "lcc")
+```
+
+```{r}
+#| label: tbl-nmes-or
+#| tbl-cap: "ZINB zero part: odds ratios (OR) of being a structural zero (a person who would not visit a physician under any circumstances), with 95% Wald confidence intervals."
+kable(data.frame(Covariate = rownames(s_zz),
+                 `OR (95% CI)` = wald_ci(s_zz[, 1], s_zz[, 2]),
+                 `p-value` = format.pval(s_zz[, 4], digits = 2, eps = 1e-4),
+                 check.names = FALSE),
+      row.names = FALSE, booktabs = TRUE, align = "lcc")
+```
+
+**Dispersion.** The NB model estimates $\hat\theta =$ `r fmt(m_nb$theta)`
+(SE `r fmt(m_nb$SE.theta, 3)`). For a person whose expected number of
+visits equals the sample mean of `r fmt(mean(y))`, the NB variance
+$\mu + \mu^2/\theta$ is about `r fmt(mean(y) + mean(y)^2 / m_nb$theta, 1)`,
+almost six times the Poisson variance. (The observed variance of
+`r fmt(var(y), 1)` is larger still, because it also includes the variation
+in expected visits between people.)
+
+**Count part (@tbl-nmes-irr).** Holding the other variables fixed, and
+using the ZINB count model, which describes people who do visit physicians:
+
+* Each additional **chronic condition** multiplies the expected number of
+  visits by `r fmt(irr("chronic", s_zc))`
+  (about `r pct(irr("chronic", s_zc))`% more), and each **hospital stay** by
+  `r fmt(irr("hospital", s_zc))`.
+* People in **poor health** make about `r pct(irr("healthpoor", s_zc))`%
+  more visits than those in average health, and people in **excellent
+  health** about `r pct(irr("healthexcellent", s_zc))`% fewer.
+* **Private insurance** raises the expected number of visits by about
+  `r pct(irr("insuranceyes", s_zc))`%, each **year of schooling** by about
+  `r fmt(100 * (irr("school", s_zc) - 1), 1)`%, and **men** make about
+  `r pct(irr("gendermale", s_zc))`% fewer visits than women.
+
+All of these effects are significant at the 1% level in both models, with
+the same signs. The ZINB count effects are somewhat smaller than the NB
+effects (for example, insurance: IRR `r fmt(irr("insuranceyes", s_nb))` in
+the NB model vs `r fmt(irr("insuranceyes", s_zc))` in the ZINB count
+model), because in the ZINB model part of each covariate's effect works
+through the zero part instead.
+
+**Zero part (@tbl-nmes-or).** These odds ratios describe who belongs to
+the group that does not visit a physician at all:
+
+* Each additional **chronic condition** multiplies the odds of being a
+  structural zero by `r fmt(or("chronic"))`, a
+  `r pct(or("chronic"))`% reduction: people with chronic conditions almost
+  always see a doctor.
+* **Private insurance** multiplies these odds by `r fmt(or("insuranceyes"))`
+  (`r pct(or("insuranceyes"))`% lower), and each **year of schooling** by
+  `r fmt(or("school"))`.
+* **Men** have `r fmt(or("gendermale"))` times the odds of women of being
+  structural non-users.
+* The effect of **hospital stays** is large in size
+  (OR `r fmt(or("hospital"))`) but only marginally significant
+  (p = `r fmt(s_zz["hospital", 4], 3)`). The estimate is imprecise because
+  few people with a hospital stay made no physician visit (only
+  `r sum(d$hospital > 0 & y == 0)` of `r sum(d$hospital > 0)`), so the data
+  carry little information about structural zeros in this group.
+
+Several covariates therefore act in **both parts in the same direction**:
+chronic conditions, insurance and education make a person less likely to
+avoid physicians entirely *and* lead to more visits among those who do see
+one, while men are both more likely to be non-users and make fewer visits.
+
+## Which model do we prefer?
+
+We prefer the **ZINB model** for these data. It has clearly the best AIC
+and BIC, it reproduces the number of zeros much better than the NB model,
+and its two parts have a sensible interpretation: a "never-user" process
+driven mainly by chronic illness, insurance, education and gender, and a
+count process for how often users see a physician. The NB model remains a
+reasonable, simpler summary of the count effects, since its incidence rate
+ratios have the same signs and similar sizes.
+
+# Discussion
+
+*To be written in the next commit.*
+
+# AI-use statement
+
+*To be written in the next commit.*
+
+# References {.unnumbered}
+
+* Deb, P. and Trivedi, P. K. (1997). Demand for medical care by the
+  elderly: A finite mixture approach. *Journal of Applied Econometrics*,
+  12(3), 313--336.
+* Zeileis, A., Kleiber, C. and Jackman, S. (2008). Regression models for
+  count data in R. *Journal of Statistical Software*, 27(8), 1--25.
