@@ -29,7 +29,9 @@ test_that("analytic ZINB Hessian matches numerical derivatives", {
   num <- numDeriv::hessian(zinb_loglik_par, par, X = pr$X, Z = pr$Z,
                            y = pr$y, offset = pr$offset)
   ana <- zinb_hessian(par, pr$X, pr$Z, pr$y, pr$offset)
-  expect_equal(unname(ana), num, tolerance = 1e-6)
+  # numDeriv's finite differences are accurate to roughly 1e-7 to 1e-6
+  # (relative), and slightly less on some processors, so allow 1e-5.
+  expect_equal(unname(ana), num, tolerance = 1e-5)
   expect_equal(ana, t(ana))
 })
 
@@ -55,6 +57,10 @@ test_that("analytic and numerical standard errors agree", {
   fit_n <- zinbreg(fm, data = bioChemists,
                    control = zinbreg_control(hessian = "numerical"))
 
-  expect_equal(fit_a$vcov, fit_n$vcov, tolerance = 1e-6)
-  expect_equal(fit_a$SE.logtheta, fit_n$SE.logtheta, tolerance = 1e-6)
+  # The numerical Hessian is the less accurate of the two: on the macOS
+  # (ARM) CI machine the two agree to about 1e-6 (relative) rather than
+  # 1e-7. A tolerance of 1e-5 still leaves a large margin below the 1e-3
+  # required for the ZINB standard errors.
+  expect_equal(fit_a$vcov, fit_n$vcov, tolerance = 1e-5)
+  expect_equal(fit_a$SE.logtheta, fit_n$SE.logtheta, tolerance = 1e-5)
 })
