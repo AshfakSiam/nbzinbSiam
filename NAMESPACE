@@ -12,6 +12,8 @@ S3method(summary,nbreg)
 S3method(vcov,nbreg)
 export(nbreg)
 export(nbreg_control)
+export(zinbreg)
+export(zinbreg_control)
 importFrom(stats,
   coef,
   fitted,
