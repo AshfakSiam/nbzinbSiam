@@ -23,7 +23,13 @@ model, on the log scale.}
 An object of class \code{"zinbreg"}: a list containing
 \describe{
 \item{coefficients}{A list with components \code{count} and \code{zero}.}
+\item{vcov}{Variance-covariance matrix of all estimates
+\eqn{(\beta, \gamma, \log\theta)}, from the inverse of the observed
+information matrix.}
 \item{theta}{Estimated dispersion parameter of the count model.}
+\item{SE.logtheta}{Standard error of \eqn{\log\theta}.}
+\item{SE.theta}{Standard error of \eqn{\theta}, by the delta method:
+\eqn{\theta \times SE(\log\theta)}.}
 \item{loglik}{Observed-data log-likelihood at the estimates.}
 \item{loglik_path}{Log-likelihood at the start and after every EM
 iteration (it never decreases).}
@@ -52,6 +58,10 @@ probability that each zero is structural. The M-step fits a logistic
 regression for \eqn{\gamma} and a weighted negative binomial regression
 for \eqn{(\beta, \theta)}, both by IRLS (with Newton-Raphson for
 \eqn{\theta}). No general-purpose optimizer is used.
+
+Standard errors are obtained by inverting the observed information
+matrix of the observed-data log-likelihood with respect to
+\eqn{(\beta, \gamma, \log\theta)} at the estimates.
 }
 \examples{
 set.seed(1)

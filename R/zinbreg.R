@@ -96,7 +96,11 @@ zinb_fit <- function(X, Z, y, offset = rep(0, length(y)),
 
   names(beta) <- colnames(X)
   names(gamma) <- colnames(Z)
-  list(count = beta, zero = gamma, theta = theta, loglik = ll,
+
+  # Standard errors from the observed information matrix.
+  vcov <- zinb_vcov(beta, gamma, theta, X, Z, y, offset)
+
+  list(count = beta, zero = gamma, theta = theta, vcov = vcov, loglik = ll,
        loglik_path = ll_path, iter = iter, converged = converged,
        mu = mu, pi = stats::plogis(eta_zero), eta_zero = eta_zero,
        theta_large = theta >= 1e4)
@@ -118,6 +122,10 @@ zinb_fit <- function(X, Z, y, offset = rep(0, length(y)),
 #' for \eqn{(\beta, \theta)}, both by IRLS (with Newton-Raphson for
 #' \eqn{\theta}). No general-purpose optimizer is used.
 #'
+#' Standard errors are obtained by inverting the observed information
+#' matrix of the observed-data log-likelihood with respect to
+#' \eqn{(\beta, \gamma, \log\theta)} at the estimates.
+#'
 #' @param formula A two-part formula `y ~ x1 + x2 | z1 + z2`: count-model
 #'   covariates before the `|` and zero-model covariates after it. Without
 #'   `|`, the same covariates are used in both parts. An offset for the
@@ -130,7 +138,13 @@ zinb_fit <- function(X, Z, y, offset = rep(0, length(y)),
 #' @return An object of class `"zinbreg"`: a list containing
 #' \describe{
 #'   \item{coefficients}{A list with components `count` and `zero`.}
+#'   \item{vcov}{Variance-covariance matrix of all estimates
+#'     \eqn{(\beta, \gamma, \log\theta)}, from the inverse of the observed
+#'     information matrix.}
 #'   \item{theta}{Estimated dispersion parameter of the count model.}
+#'   \item{SE.logtheta}{Standard error of \eqn{\log\theta}.}
+#'   \item{SE.theta}{Standard error of \eqn{\theta}, by the delta method:
+#'     \eqn{\theta \times SE(\log\theta)}.}
 #'   \item{loglik}{Observed-data log-likelihood at the estimates.}
 #'   \item{loglik_path}{Log-likelihood at the start and after every EM
 #'     iteration (it never decreases).}
@@ -214,8 +228,12 @@ zinbreg <- function(formula, data, offset, control = zinbreg_control()) {
             "and is essentially a Poisson model.", call. = FALSE)
   }
 
+  se_logtheta <- sqrt(fit$vcov["Log(theta)", "Log(theta)"])
   out <- list(coefficients = list(count = fit$count, zero = fit$zero),
+              vcov = fit$vcov,
               theta = fit$theta,
+              SE.logtheta = se_logtheta,
+              SE.theta = fit$theta * se_logtheta,
               loglik = fit$loglik,
               loglik_path = fit$loglik_path,
               iterations = fit$iter,
