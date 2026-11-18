@@ -20,6 +20,10 @@ numerically with
 This package was written for the STA 651 final project (Fall 2026, Miami
 University).
 
+**Website:** <https://ashfaksiam.github.io/nbzinbSiam/>, with the
+function reference and the full project report ([PDF
+version](https://github.com/AshfakSiam/nbzinbSiam/blob/main/report/report.pdf)).
+
 ## Installation
 
 ``` r
@@ -96,3 +100,11 @@ test suite in `tests/testthat/` checks this automatically:
 | Standard errors                | \< 1e-5             | \< 1e-3                 |
 | theta (NB) / log(theta) (ZINB) | \< 1e-4             | \< 1e-3                 |
 | Log-likelihood                 | \< 1e-4             | \< 1e-3                 |
+
+The benchmark and simulation scripts behind the report are in
+`inst/benchmark/`.
+
+## Notes on `R CMD check`
+
+[`devtools::check()`](https://devtools.r-lib.org/reference/check.html)
+finishes with 0 errors, 0 warnings and 0 notes.

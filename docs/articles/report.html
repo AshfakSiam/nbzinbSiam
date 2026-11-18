@@ -38,6 +38,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/AshfakSiam/nbzinbSiam/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -52,7 +53,7 @@
       <p class="author">Ashfak Siam</p>
       <p class="date">November 17, 2026</p>
 
-
+      <small class="dont-index">Source: <a href="https://github.com/AshfakSiam/nbzinbSiam/blob/HEAD/vignettes/articles/report.qmd" class="external-link"><code>vignettes/articles/report.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -299,25 +300,25 @@ Table 2: Computation time in seconds (median of three runs) and number of outer
 <tr class="odd">
 <td style="text-align: left;">bioChemists NB</td>
 <td style="text-align: center;">0.030</td>
-<td style="text-align: center;">0.110</td>
+<td style="text-align: center;">0.090</td>
 <td style="text-align: center;">4</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">bioChemists ZINB</td>
-<td style="text-align: center;">2.020</td>
-<td style="text-align: center;">0.390</td>
+<td style="text-align: center;">1.710</td>
+<td style="text-align: center;">0.310</td>
 <td style="text-align: center;">111</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">NMES1988 NB</td>
-<td style="text-align: center;">0.160</td>
-<td style="text-align: center;">0.360</td>
+<td style="text-align: center;">0.130</td>
+<td style="text-align: center;">0.300</td>
 <td style="text-align: center;">3</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">NMES1988 ZINB</td>
-<td style="text-align: center;">4.190</td>
-<td style="text-align: center;">1.800</td>
+<td style="text-align: center;">3.340</td>
+<td style="text-align: center;">1.400</td>
 <td style="text-align: center;">53</td>
 </tr>
 </tbody>
@@ -649,7 +650,7 @@ Table 6: ZINB zero part: odds ratios (OR) of being a structural zero (a person 
 <p><strong>What I asked it to do.</strong> Set up the package structure; implement each algorithm exactly as written in Sections 2–3 of the project description (the IRLS weights and working response, the Newton–Raphson update for <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>⁡</mo></mrow><mi>θ</mi></mrow><annotation encoding="application/x-tex">\log\theta</annotation></semantics></math>, the E-step <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>τ</mi><mi>i</mi></msub><annotation encoding="application/x-tex">\tau_i</annotation></semantics></math> and both M-steps); derive and code the analytic Hessian; write the S3 methods, tests, benchmark and simulation scripts; and draft this report. The rule that <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>, <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and the other prohibited functions must not be used in <code>R/</code> is recorded in the project’s <code>CLAUDE.md</code> file, and a test scans the package code for them.</p>
 <p><strong>What I verified myself.</strong> I checked that the code implements the equations of the project description (for example the weights <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><msub><mi>μ</mi><mi>i</mi></msub><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mi>θ</mi><mo>+</mo><msub><mi>μ</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\theta\mu_i/(\theta + \mu_i)</annotation></semantics></math> in <code>nb_irls()</code> and the E-step formula in <code>zinb_estep()</code>), ran every test and <code>R CMD check</code> locally, compared the <code><a href="../reference/nbreg.html">nbreg()</a></code> and <code><a href="../reference/zinbreg.html">zinbreg()</a></code> output line by line with <code>glm.nb()</code> and <code>zeroinfl()</code>, confirmed that the EM log-likelihood never decreased, and checked that the simulation results reproduced exactly on my computer.</p>
 <p><strong>Where its output was wrong.</strong> Early in the project Claude told me twice that I did not need Rtools on Windows because the package contains no compiled code. When I ran <code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> it failed with “Could not find tools necessary to compile a package”, so the advice was wrong: the check needs the build tools even for a pure-R package. I installed Rtools45 and the check then passed. Several of Claude’s own first-draft tests also failed when run and had to be corrected before I used them, for example a test that compared <code><a href="../reference/zinbreg.html">zinbreg()</a></code> residuals with <code><a href="https://rdrr.io/r/stats/residuals.html" class="external-link">residuals()</a></code> of a <code>zeroinfl</code> fit, which returns Pearson rather than response residuals by default.</p>
-<p>A second case was caught by continuous integration rather than on my own computer. After I pushed the analytic Hessian, all 127 tests passed locally, but the GitHub Actions run failed on the macOS (ARM) machine while passing on Windows and Linux. I opened the job log, found the failing test (“analytic and numerical standard errors agree”) and saw that the two variance matrices differed by up to about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.3</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1.3 \times 10^{-6}</annotation></semantics></math> (relative), just above the tolerance of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup><annotation encoding="application/x-tex">10^{-6}</annotation></semantics></math> that Claude had chosen. The analytic Hessian is exact; it is the finite-difference approximation from <code>numDeriv</code> that is slightly less accurate on that processor. The tolerance was therefore too strict rather than the code wrong, so I loosened it to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><annotation encoding="application/x-tex">10^{-5}</annotation></semantics></math>, which is still 100 times stricter than the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup><annotation encoding="application/x-tex">10^{-3}</annotation></semantics></math> required for the ZINB standard errors, and the CI run passed on all platforms. These cases showed me that every suggestion has to be checked by running it, and on more than one machine.</p>
+<p>A second case was caught by continuous integration rather than on my own computer. After I pushed the analytic Hessian, all 127 tests passed locally, but the GitHub Actions run failed on the macOS (ARM) machine while passing on Windows and Linux. I opened the job log, found the failing test (“analytic and numerical standard errors agree”) and saw that the two variance matrices differed by up to about <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1.3</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup></mrow><annotation encoding="application/x-tex">1.3 \times 10^{-6}</annotation></semantics></math> (relative), just above the tolerance of <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>6</mn></mrow></msup><annotation encoding="application/x-tex">10^{-6}</annotation></semantics></math> that Claude had chosen. The analytic Hessian is exact; it is the finite-difference approximation from <code>numDeriv</code> that is slightly less accurate on that processor. The tolerance was therefore too strict rather than the code wrong, so I loosened it to <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>5</mn></mrow></msup><annotation encoding="application/x-tex">10^{-5}</annotation></semantics></math>, which is still 100 times stricter than the <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>10</mn><mrow><mi>−</mi><mn>3</mn></mrow></msup><annotation encoding="application/x-tex">10^{-3}</annotation></semantics></math> required for the ZINB standard errors. CI also caught a packaging mistake: after building the pkgdown website, helper files that Quarto had left in <code>vignettes/</code> made <code>R CMD check</code> report a warning on every platform, and I fixed it by excluding that folder from the package build. After these two fixes, <code>R CMD check</code> passes on all five CI platforms (macOS, Windows, and Linux with the development, current and previous versions of R). These cases showed me that every suggestion has to be checked by running it, and on more than one machine.</p>
 </section><section class="section level2"><h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
 <ul>

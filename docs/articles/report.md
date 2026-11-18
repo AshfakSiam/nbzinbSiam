@@ -271,10 +271,10 @@ same maximum: the log-likelihoods agree to about $`10^{-8}`$.
 
 | Comparison       | Ours  | Reference | Iterations |
 |:-----------------|:-----:|:---------:|:----------:|
-| bioChemists NB   | 0.030 |   0.110   |     4      |
-| bioChemists ZINB | 2.020 |   0.390   |    111     |
-| NMES1988 NB      | 0.160 |   0.360   |     3      |
-| NMES1988 ZINB    | 4.190 |   1.800   |     53     |
+| bioChemists NB   | 0.030 |   0.090   |     4      |
+| bioChemists ZINB | 1.710 |   0.310   |    111     |
+| NMES1988 NB      | 0.130 |   0.300   |     3      |
+| NMES1988 ZINB    | 3.340 |   1.400   |     53     |
 
 Table 2: Computation time in seconds (median of three runs) and number
 of outer (NB) or EM (ZINB) iterations of our functions.
@@ -577,7 +577,12 @@ the finite-difference approximation from `numDeriv` that is slightly
 less accurate on that processor. The tolerance was therefore too strict
 rather than the code wrong, so I loosened it to $`10^{-5}`$, which is
 still 100 times stricter than the $`10^{-3}`$ required for the ZINB
-standard errors, and the CI run passed on all platforms. These cases
+standard errors. CI also caught a packaging mistake: after building the
+pkgdown website, helper files that Quarto had left in `vignettes/` made
+`R CMD check` report a warning on every platform, and I fixed it by
+excluding that folder from the package build. After these two fixes,
+`R CMD check` passes on all five CI platforms (macOS, Windows, and Linux
+with the development, current and previous versions of R). These cases
 showed me that every suggestion has to be checked by running it, and on
 more than one machine.
 

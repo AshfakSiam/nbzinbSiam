@@ -727,8 +727,13 @@ analytic Hessian is exact; it is the finite-difference approximation
 from `numDeriv` that is slightly less accurate on that processor. The
 tolerance was therefore too strict rather than the code wrong, so I
 loosened it to $10^{-5}$, which is still 100 times stricter than the
-$10^{-3}$ required for the ZINB standard errors, and the CI run passed on
-all platforms. These cases showed me that every suggestion has to be
+$10^{-3}$ required for the ZINB standard errors. CI also caught a
+packaging mistake: after building the pkgdown website, helper files that
+Quarto had left in `vignettes/` made `R CMD check` report a warning on
+every platform, and I fixed it by excluding that folder from the package
+build. After these two fixes, `R CMD check` passes on all five CI
+platforms (macOS, Windows, and Linux with the development,
+current and previous versions of R). These cases showed me that every suggestion has to be
 checked by running it, and on more than one machine.
 
 # References {.unnumbered}

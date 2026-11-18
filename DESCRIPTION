@@ -25,3 +25,5 @@ Imports:
     stats
 Depends: 
     R (>= 3.5.0)
+URL: https://ashfaksiam.github.io/nbzinbSiam/, https://github.com/AshfakSiam/nbzinbSiam
+BugReports: https://github.com/AshfakSiam/nbzinbSiam/issues

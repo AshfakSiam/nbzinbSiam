@@ -38,6 +38,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/AshfakSiam/nbzinbSiam/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -81,6 +82,7 @@
 </table>
 <p>No general-purpose optimizer (<code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>, <code><a href="https://rdrr.io/r/stats/nlm.html" class="external-link">nlm()</a></code>, <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, …) is used anywhere in the fitting code. Standard errors for the ZINB model come from the observed information matrix, computed with an analytic Hessian (or, optionally, numerically with <code><a href="https://rdrr.io/pkg/numDeriv/man/hessian.html" class="external-link">numDeriv::hessian()</a></code>).</p>
 <p>This package was written for the STA 651 final project (Fall 2026, Miami University).</p>
+<p><strong>Website:</strong> <a href="https://ashfaksiam.github.io/nbzinbSiam/" class="uri">https://ashfaksiam.github.io/nbzinbSiam/</a>, with the function reference and the full project report (<a href="https://github.com/AshfakSiam/nbzinbSiam/blob/main/report/report.pdf" class="external-link">PDF version</a>).</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -92,7 +94,7 @@
 <h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">nbzinbSiam</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ashfaksiam.github.io/nbzinbSiam/">nbzinbSiam</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"bioChemists"</span>, package <span class="op">=</span> <span class="st">"pscl"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Negative binomial regression</span></span>
@@ -158,9 +160,24 @@
 </tr>
 </tbody>
 </table>
+<p>The benchmark and simulation scripts behind the report are in <code>inst/benchmark/</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="notes-on-r-cmd-check">Notes on <code>R CMD check</code>
+<a class="anchor" aria-label="anchor" href="#notes-on-r-cmd-check"></a>
+</h2>
+<p><code><a href="https://devtools.r-lib.org/reference/check.html" class="external-link">devtools::check()</a></code> finishes with 0 errors, 0 warnings and 0 notes.</p>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/AshfakSiam/nbzinbSiam/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/AshfakSiam/nbzinbSiam/issues" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li><a href="LICENSE.html">Full license</a></li>
