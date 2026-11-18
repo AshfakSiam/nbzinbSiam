@@ -1,0 +1,30 @@
+url: https://ashfaksiam.github.io/nbzinbSiam/
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    articles:
+      text: Report
+      href: articles/report.html
+
+reference:
+  - title: Negative binomial regression
+    contents:
+      - nbreg
+      - nbreg_control
+      - nbreg-methods
+  - title: Zero-inflated negative binomial regression
+    contents:
+      - zinbreg
+      - zinbreg_control
+      - zinbreg-methods
+
+articles:
+  - title: Report
+    contents:
+      - articles/report

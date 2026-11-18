@@ -4,27 +4,29 @@ subtitle: "STA 651 Final Project: the nbzinbSiam R package"
 author: "Ashfak Siam"
 date: "2026-11-17"
 date-format: long
-format:
-  pdf:
-    documentclass: article
-    geometry: margin=1in
-    fontsize: 11pt
-    number-sections: true
-    colorlinks: true
-    fig-width: 6.5
-    fig-height: 3.6
-    fig-pos: "H"
-    include-in-header:
-      text: |
-        \usepackage{float}
-        \floatplacement{table}{H}
-  html:
-    number-sections: true
+# Layout options for the PDF. They are set at the top level, rather than
+# under "format: pdf", so that pkgdown (which renders every listed format)
+# builds only the HTML version for the website. The PDF is rendered with
+#   quarto render vignettes/articles/report.qmd --to pdf
+number-sections: true
+documentclass: article
+geometry: margin=1in
+fontsize: 11pt
+colorlinks: true
+fig-width: 6.5
+fig-height: 3.6
+fig-pos: "H"
+format: html
 execute:
   echo: false
   warning: false
   message: false
 ---
+
+```{=latex}
+% Keep tables where they appear in the text (Quarto loads the float package).
+\floatplacement{table}{H}
+```
 
 ```{r}
 #| label: setup
